@@ -1,41 +1,77 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
+
+from utils import http_get
 from bs4 import BeautifulSoup
-import PyV8
+
 import urllib2
-import re
+import re, os, shutil
+import utils
 
-site_url = "http://www.tuku.cc"
-comic_url = "http://www.tuku.cc/comic/10533/"
+import parseTuku as Parse
 
-def http_get(url):
-	print "GET:%s"%url
-	resp = urllib2.urlopen(url)
-	data = resp.read()
-	return data
+conf = {
+	"comic_name": u"政宗君的复仇",
+	"comic_url": "/comic/10533/",
+}
+download_path = "comics"
 
-def get_chapters(comic_url):
-	html_data = http_get(comic_url)
-	soup = BeautifulSoup(html_data, "lxml")
-	chapter_box = soup.find(class_="chapterBox")
-	chps = {}#name:url
-	for link in  chapter_box.find_all("a"):
-		chp_name = link.stripped_strings.next()
-		chp_id = None
-		m = re.match(u"第(\d+(.\d+)?)话",chp_name,re.UNICODE)
+features = "html.parser"
+try:
+	import lxml
+	features = "lxml"
+except ImportError:
+	pass
 
-		if m:
-			chp_id = m.group(1)
-			chp_url = link['href']
-			chps[chp_id] = chp_url
-	return chps
+try:
+	import PyV8
+except ImportError:
+	# print "in osx."
+	from pyv8 import PyV8
 
 
+
+
+def download_chaper(imgs_url,dst_dir):
+
+	if not os.path.exists(dst_dir):
+		os.makedirs(dst_dir)
+
+	# imgs_url = Parse.get_imgs_url(chp_url)
+	for img_url in imgs_url:
+
+		img_name = img_url[img_url.rfind("/") + 1:]
+		img_path = os.path.join(dst_dir, img_name)
+
+		if os.path.exists(img_path):
+			print "skip:%s"%img_path
+			continue
+
+		img_context = http_get(img_url)
+
+
+
+		with open(img_path,"wb") as f:
+			f.write(img_context)
+		print "download %s:%s"%(img_url, img_path)
+
+
+def down_comic(comic_conf):
+	comic_name = comic_conf['comic_name']
+	comic_url = comic_conf['comic_url']
+	parse = comic_conf.get("parse") or Parse
+
+	chps_url = parse.get_chapters(comic_url)
+	for chp_id, chp_url in chps_url.items():
+		imgs = parse.get_imgs_url(chp_url)
+		# print imgs
+		dst_dir = os.path.join(download_path, comic_name, chp_id)
+		download_chaper(imgs, dst_dir)
+		utils.compress_folder(dst_dir, os.path.join(download_path, comic_name, "compress"))
 
 
 
 def main():
-	print get_chapters(comic_url)
-
+	down_comic(conf)
 
 if __name__ == "__main__":
 	main()
