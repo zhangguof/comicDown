@@ -11,6 +11,16 @@ def http_get(url):
 	return data
 
 
+def down_and_save(url,dst_path):
+	print "downloading %s"%url
+	context = http_get(url)
+	with open(dst_path, "wb") as f:
+		f.write(context)
+
+	print "save %s" % dst_path
+
+
+
 def compress_folder(src,dst):
 	base_path, arch_path = os.path.split(src)
 	arch_file = arch_path + ".zip"
