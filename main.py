@@ -18,7 +18,7 @@ from operator import itemgetter, attrgetter
 # 	"comic_url": "/comic/10533/",
 # }
 # import parseBuka as Parse
-import parse36mh as Parse
+import parse36mh
 
 # conf = {
 # 	"comic_name": u"1年A班的Monster",
@@ -29,6 +29,7 @@ import parse36mh as Parse
 conf = {
 	"comic_name":u"黑色四叶草",
 	"comic_url":"/manhua/heisesiyecao/",
+	"Parse":parse36mh,
 }
 download_path = "comics"
 
@@ -49,19 +50,20 @@ pool = Pool(100)
 
 
 class Comic(object):
-	def __init__(self, name, url, down_path,first_chp_url=''):
+	def __init__(self, name, url, down_path,parse,first_chp_url=''):
 		self.chapters = [] #
 		self.name = name
 		self.url = url
 		self.first_chp_url = first_chp_url
 		self.comic_path = os.path.join(down_path, name)
+		self.Parse = parse
 
 
 
 	def load_chapters(self,start_id=0,end_id=10000000):
 		if self.url == "":
 			return self.load_chps_from_fist_chps()
-		chps = Parse.get_chapters(self.url)
+		chps = self.Parse.get_chapters(self.url)
 		# print chps
 		for chp_id,chp_url in chps.items():
 			if(int(chp_id) < start_id) or int(chp_id)>end_id:
@@ -73,15 +75,15 @@ class Comic(object):
 		# self.chapters = self.chapters[:2]
 	def load_chps_from_fist_chps(self):
 		http_req = HttpReq()
-		chps = Parse.get_chps_from_first_chp(self.first_chp_url,http_req)
+		chps = self.Parse.get_chps_from_first_chp(self.first_chp_url,http_req)
 		for chp_id,item in chps.items():
 			self.add_chapter(chp_id,item["url"],item["imgs"])
 			
 		self.chapters.sort(key=attrgetter("chp_id"))
-		print self.chapters
+		# print self.chapters
 	
 	def add_chapter(self,chp_id, chp_url,imgs=None):
-		self.chapters.append(Chapter(chp_id,chp_url,self.comic_path,imgs))
+		self.chapters.append(Chapter(chp_id,chp_url,self.comic_path,self.Parse,imgs))
 
 	def download_all(self):
 		def _down(chp):
@@ -99,15 +101,16 @@ class Comic(object):
 
 
 class Chapter(object):
-	def __init__(self, chp_id, url, comic_path,imgs=None):
+	def __init__(self, chp_id, url, comic_path,parse,imgs=None):
 		self.chp_id = chp_id
 		self.url = url
 		self.imgs = [] if imgs is None else imgs # (name,url)
 		self.chp_path = os.path.join(comic_path,chp_id)
+		self.Parse = parse
 
 	def load(self):
 		if len(self.imgs) == 0:
-			self.imgs = Parse.get_imgs_url(self.url)
+			self.imgs = self.Parse.get_imgs_url(self.url)
 
 	def down_imgs(self):
 		if not os.path.exists(self.chp_path):
@@ -225,21 +228,22 @@ def down_comic(comic_conf):
 		utils.compress_folder(dst_dir, os.path.join(download_path, comic_name, "compress"))
 
 
-def make_zip(comic,dst):
+def make_zip(comic,dst,rewrite=False):
 	for chp in comic.chapters:
 		chp_dst = os.path.join(dst,comic.name)
 		chp_src = os.path.join(comic.comic_path,chp.chp_id)
-		utils.compress_folder(chp_src,chp_dst)
+		utils.compress_folder(chp_src,chp_dst,rewrite)
 
 def main():
 	import time
 	s_time = time.time()
 	# down_comic(conf)
     # down_comic_by_gevent(conf)
-	comic = Comic(conf['comic_name'], conf['comic_url'], download_path,conf.get('firs_chp_url',""))
-	comic.load_chapters(170)
-	comic.download_all()
-	# make_zip(comic,"zips")
+	comic = Comic(conf['comic_name'], conf['comic_url'], \
+	              download_path, conf["Parse"],conf.get('firs_chp_url',""))
+	comic.load_chapters(171)
+	# comic.download_all()
+	make_zip(comic,"zips",True)
 	
 	
 	

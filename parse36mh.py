@@ -78,8 +78,15 @@ def get_imgs_url(chp_url):
 	# for i in xrange(1,total_page+1):
 	# 	imgs_url.append(img_server + js_get_img_url(i))
 	imgs_name = [s[s.rfind("/") + 1:] for s in imgs_url]
+	imgs_rename = []
 	#rename:
-	imgs_rename = [str(i)+s[s.rfind("."):] for i,s in enumerate(imgs_name)]
+	for i,s in enumerate(imgs_name):
+		ext = s[s.rfind("."):]
+		if ext!=".jpg" or ext!=".png":
+			ext = ".jpg"
+		imgs_rename.append(str(i)+ext)
+		
+	# imgs_rename = [str(i)+s[s.rfind("."):] for i,s in enumerate(imgs_name)]
 	return zip(imgs_rename, imgs_url)
 
 if __name__ == "__main__":

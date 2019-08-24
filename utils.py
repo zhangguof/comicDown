@@ -113,21 +113,23 @@ def down_and_save(url,dst_path):
 	print "save %s" % dst_path
 
 
-
-def compress_folder(src,dst):
+import shutil
+def compress_folder(src,dst,rewrite=False):
 	base_path, arch_path = os.path.split(src)
 	arch_file = arch_path + ".zip"
 	if not os.path.exists(dst):
 		os.makedirs(dst)
 	zip_path = os.path.join(dst, arch_file)
-	if os.path.exists(zip_path):
+	if os.path.exists(zip_path) and not rewrite:
 		print "existing... %s"%zip_path
 		return
+		
 	zipf = zipfile.ZipFile(zip_path, "w")
 	for root,dirs,files in os.walk(src):
 		for fname in files:
-			fpath = os.path.join(root,fname)
-			zipf.write(fpath,fname)
+			if fname.endswith(".jpg") or fname.endswith(".png"):
+				fpath = os.path.join(root,fname)
+				zipf.write(fpath,fname)
 		break
 
 	zipf.close()
