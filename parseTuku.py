@@ -65,4 +65,5 @@ def get_imgs_url(chp_url):
 	imgs_url = []
 	for i in xrange(1,total_page+1):
 		imgs_url.append(img_server + js_get_img_url(i))
-	return imgs_url
+	imgs_name = [s[s.rfind("/") + 1:] for s in imgs_url]
+	return zip(imgs_name, imgs_url)
