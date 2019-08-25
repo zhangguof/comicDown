@@ -11,6 +11,8 @@ import traceback
 import requests
 import cookielib
 
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 class DownPool(object):
 	def __init__(self,size):
@@ -133,3 +135,9 @@ def compress_folder(src,dst,rewrite=False):
 		break
 
 	zipf.close()
+	
+	
+if __name__ == "__main__":
+	req = urllib2.Request('https://www.manhuadui.com/manhua/guimiezhiren/')
+	data = urllib2.urlopen(req).read()
+	print(data)

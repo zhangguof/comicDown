@@ -19,6 +19,7 @@ from operator import itemgetter, attrgetter
 # }
 # import parseBuka as Parse
 import parse36mh
+import parseManhuadui
 
 # conf = {
 # 	"comic_name": u"1年A班的Monster",
@@ -26,10 +27,16 @@ import parse36mh
 # 	"firs_chp_url":"/view/221736/65537",
 # }
 
+# conf = {
+# 	"comic_name":u"黑色四叶草",
+# 	"comic_url":"/manhua/heisesiyecao/",
+# 	"Parse":parse36mh,
+# }
+
 conf = {
-	"comic_name":u"黑色四叶草",
-	"comic_url":"/manhua/heisesiyecao/",
-	"Parse":parse36mh,
+	"comic_name":u"鬼灭之刃",
+	"comic_url":"/manhua/guimiezhiren/",
+	"Parse":parseManhuadui,
 }
 download_path = "comics"
 
@@ -237,13 +244,15 @@ def make_zip(comic,dst,rewrite=False):
 def main():
 	import time
 	s_time = time.time()
-	# down_comic(conf)
+	
+	
     # down_comic_by_gevent(conf)
 	comic = Comic(conf['comic_name'], conf['comic_url'], \
 	              download_path, conf["Parse"],conf.get('firs_chp_url',""))
-	comic.load_chapters(171)
-	# comic.download_all()
-	make_zip(comic,"zips",True)
+	comic.load_chapters()
+	comic.download_all()
+	
+	# make_zip(comic, "zips", True)  # down_comic(conf)
 	
 	
 	
